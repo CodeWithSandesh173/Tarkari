@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>आज को तरकारी के?</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f4f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      color: #1a1a1a;
+    }
+
+    .top-bar {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.75rem;
+    }
+
+    .site-name {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #888;
+    }
+
+    .np-time {
+      font-size: 13px;
+      color: #666;
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #16a34a;
+      animation: blink 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.25; }
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e5e3dc;
+      border-radius: 16px;
+      padding: 2.5rem 2rem 2rem;
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      background: #f5f4f0;
+      color: #888;
+      border: 1px solid #e5e3dc;
+      border-radius: 8px;
+      padding: 4px 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    .veg-name {
+      font-size: 36px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 0.35rem;
+      min-height: 48px;
+      line-height: 1.2;
+    }
+
+    .veg-name.loading {
+      font-size: 17px;
+      font-weight: 400;
+      color: #aaa;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+
+    .veg-sub {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 1.5rem;
+      min-height: 20px;
+    }
+
+    .divider {
+      width: 36px;
+      height: 1px;
+      background: #e5e3dc;
+      margin: 0 auto 1.5rem;
+    }
+
+    .added-row {
+      font-size: 13px;
+      color: #aaa;
+    }
+
+    .added-row strong {
+      color: #555;
+      font-weight: 600;
+    }
+
+    .error-pill {
+      display: inline-block;
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 7px 16px;
+      font-size: 13px;
+      margin-top: 1rem;
+    }
+
+    .footer {
+      width: 100%;
+      max-width: 480px;
+      margin-top: 1.25rem;
+      text-align: center;
+      font-size: 12px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <span class="site-name">आज को तरकारी के?</span>
+    <span class="np-time">
+      <span class="dot"></span>
+      <span id="clock">--:--:-- TIME</span>
+    </span>
+  </div>
+
+  <div class="card">
+    <span class="badge">आजको तरकारी</span>
+    <div class="veg-name loading" id="veg-name">Fetching from database…</div>
+    <div class="veg-sub" id="veg-sub"></div>
+    <div class="divider"></div>
+    <div class="added-row" id="added-row">—</div>
+    <div id="error-area"></div>
+  </div>
+
+  <div class="footer">
+दैनिक अपडेट  &nbsp;·&nbsp; by Sandesh Bhandari </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBykeOwdjj7QSeXTlET73-m87mG-3Zfe7I",
+      authDomain: "aajatarkarik.firebaseapp.com",
+      projectId: "aajatarkarik",
+      storageBucket: "aajatarkarik.firebasestorage.app",
+      messagingSenderId: "1014146878916",
+      appId: "1:1014146878916:web:5753761c70dac88ea56891"
+    };
+
+    function updateClock() {
+      const npt = new Date(Date.now() + (5 * 60 + 45) * 60000);
+      const h  = String(npt.getUTCHours()).padStart(2, "0");
+      const m  = String(npt.getUTCMinutes()).padStart(2, "0");
+      const s  = String(npt.getUTCSeconds()).padStart(2, "0");
+      document.getElementById("clock").textContent = `${h}:${m}:${s} तपाईंको उपकरण समय हो`;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    function formatNPT(ts) {
+      if (!ts) return null;
+      let ms;
+      if (ts.toDate)            ms = ts.toDate().getTime();
+      else if (ts instanceof Date) ms = ts.getTime();
+      else if (typeof ts === "number") ms = ts;
+      else return null;
+
+      const npt = new Date(ms + (5 * 60 + 45) * 60000);
+      const days   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const d  = days[npt.getUTCDay()];
+      const dt = npt.getUTCDate();
+      const mo = months[npt.getUTCMonth()];
+      const yr = npt.getUTCFullYear();
+      const h  = String(npt.getUTCHours()).padStart(2, "0");
+      const mi = String(npt.getUTCMinutes()).padStart(2, "0");
+      return `${d}, ${dt} ${mo} ${yr} at ${h}:${mi} NPT`;
+    }
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    async function loadVeg() {
+      const nameEl  = document.getElementById("veg-name");
+      const subEl   = document.getElementById("veg-sub");
+      const addedEl = document.getElementById("added-row");
+      const errEl   = document.getElementById("error-area");
+
+      try {
+        const ref  = doc(db, "vegetables", "today");
+        const snap = await getDoc(ref);
+
+        let data = null;
+        if (snap.exists()) {
+          data = snap.data();
+        } else {
+          const colSnap = await getDocs(collection(db, "vegetables"));
+          if (!colSnap.empty) data = colSnap.docs[0].data();
+        }
+
+        if (data) {
+          nameEl.className = "veg-name";
+          nameEl.textContent = data.name || "Unknown";
+
+          if (data.nepali)           subEl.textContent = data.nepali;
+          else if (data.description) subEl.textContent = data.description;
+
+          const ts = data.addedAt || data.createdAt || data.timestamp || data.updatedAt || null;
+          const formatted = formatNPT(ts);
+          if (formatted) {
+            addedEl.innerHTML = `पछिल्लो अपडेट <strong>${formatted}</strong>`;
+          } else if (typeof ts === "string" && ts.trim()) {
+            addedEl.innerHTML = `Added on <strong>${ts}</strong>`;
+          } else {
+            addedEl.textContent = "Added time not available";
+          }
+        } else {
+          nameEl.className = "veg-name";
+          nameEl.textContent = "Nothing today";
+          subEl.textContent = "No vegetables found in database";
+        }
+      } catch (e) {
+        nameEl.className = "veg-name";
+        nameEl.textContent = "Couldn't load";
+        errEl.innerHTML = `<div class="error-pill">${e.message}</div>`;
+      }
+    }
+
+    loadVeg();
+  </script>
+<p> ध्यान दिनुहोस् कि तरकारी थपिएको समय नेपाली हो र यदि सन्देशले अपडेट गर्न बिर्सेको भए १००% वास्तविक नहुन सक्छ। </p>
+
+</body>
+</html>
